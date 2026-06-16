@@ -3,10 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relay</title>
+  <title>Ashara 1448 Relay</title>
   <link rel="icon" type="image/png" href="/hussain.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #262626;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #e4e4e7;
+      --error: #ef4444;
+      --focus: #3b82f6;
+      --radius: 12px;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,156 +28,147 @@
     }
 
     body {
-      font-family: "Montserrat", Arial, sans-serif;
-      background: #f2f3eb;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      min-height: 100dvh;
       padding: 1rem;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .card {
-      background: linear-gradient(
-        90deg,
-        rgba(238, 174, 202, 1) 0%,
-        rgba(154, 186, 231, 1) 93%,
-        rgba(148, 187, 233, 1) 100%
-      );
-      border: solid 3px #474544;
-      border-radius: 1cm;
-      padding: 2.5rem 2rem;
+    .login {
       width: 100%;
       max-width: 380px;
+    }
+
+    .brand {
       display: flex;
       flex-direction: column;
       align-items: center;
+      margin-bottom: 2.5rem;
     }
 
-    .logo {
-      width: 100px;
+    .brand img {
+      width: 72px;
       height: auto;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      opacity: 0.9;
     }
 
-    h1 {
-      font-size: 1.5rem;
-      color: #474544;
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+    }
+
+    .error {
+      color: var(--error);
+      font-size: 0.8125rem;
       text-align: center;
-      margin-bottom: 1.25rem;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      font-weight: 700;
+      margin-bottom: 1rem;
+      min-height: 1.125rem;
+      font-weight: 500;
     }
 
-    .underline {
-      border-bottom: solid 2px #474544;
-      margin: 0 auto 1.5rem;
-      width: 80px;
+    .field {
+      margin-bottom: 1.25rem;
     }
 
     label {
       display: block;
-      font-size: 0.95rem;
-      color: #474544;
-      margin-bottom: 0.35rem;
+      font-size: 0.8125rem;
       font-weight: 500;
-      width: 100%;
-      text-align: left;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
     }
 
-    input[type="text"],
-    input[type="password"] {
+    input {
       width: 100%;
-      padding: 0.75rem 0;
-      font-size: 1rem;
-      font-family: "Montserrat", Arial, sans-serif;
-      background: none;
-      border: none;
-      border-bottom: solid 2px #474544;
-      color: #474544;
-      margin-bottom: 1.25rem;
+      padding: 0.625rem 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
       outline: none;
-      letter-spacing: 1px;
-      transition: border-color 0.3s;
+      transition: border-color 0.15s;
     }
 
     input:focus {
-      border-bottom-color: #8b1a2b;
+      border-color: var(--focus);
     }
 
     input::placeholder {
-      color: #474544;
-    }
-
-    form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      color: #52525b;
     }
 
     button {
-      background: none;
-      border: solid 2px #474544;
-      color: #474544;
-      cursor: pointer;
-      font-family: "Montserrat", Arial, sans-serif;
+      width: 100%;
+      padding: 0.625rem;
       font-size: 0.875rem;
-      font-weight: bold;
-      padding: 15px 35px;
-      text-transform: uppercase;
-      transition: all 0.3s;
-      margin-top: 0.5rem;
+      font-family: inherit;
+      font-weight: 600;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 0.25rem;
     }
 
     button:hover {
-      background: #474544;
-      color: #f2f3eb;
+      opacity: 0.85;
     }
 
-    .error {
-      color: #c0392b;
-      font-size: 0.9rem;
-      text-align: center;
-      margin-bottom: 1rem;
-      min-height: 1.25rem;
-      font-weight: 500;
+    button:active {
+      opacity: 0.7;
     }
 
     @media screen and (max-width: 480px) {
       .card {
-        border-radius: 0;
-        border: none;
-        min-height: 100vh;
-        justify-content: center;
-        max-width: 100%;
-        padding: 2rem 1.5rem;
+        padding: 1.5rem;
       }
 
-      h1 {
-        font-size: 1.25rem;
-      }
-
-      button {
-        padding: 12px 25px;
+      .brand img {
+        width: 56px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <img src="/hussain.png" alt="Relay" class="logo">
-    <h1>Relay</h1>
-    <div class="underline"></div>
-    <div class="error">{{ERROR_MESSAGE}}</div>
-    <form method="POST" action="/login">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Username" autocomplete="username" required>
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
-      <button type="submit">Confirm</button>
-    </form>
+  <div class="login">
+    <div class="brand">
+      <img src="/hussain.png" alt="">
+      <h1>Ashara 1448 Relay</h1>
+    </div>
+    <div class="card">
+      <div class="error">{{ERROR_MESSAGE}}</div>
+      <form method="POST" action="/login">
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required>
+        </div>
+        <button type="submit">Sign in</button>
+      </form>
+    </div>
   </div>
 </body>
 </html>
