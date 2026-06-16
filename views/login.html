@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relay</title>
+  <link rel="icon" type="image/png" href="/hussain.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Montserrat", Arial, sans-serif;
+      background: #f2f3eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .card {
+      background: linear-gradient(
+        90deg,
+        rgba(238, 174, 202, 1) 0%,
+        rgba(154, 186, 231, 1) 93%,
+        rgba(148, 187, 233, 1) 100%
+      );
+      border: solid 3px #474544;
+      border-radius: 1cm;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      width: 100px;
+      height: auto;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #474544;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .underline {
+      border-bottom: solid 2px #474544;
+      margin: 0 auto 1.5rem;
+      width: 80px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      color: #474544;
+      margin-bottom: 0.35rem;
+      font-weight: 500;
+      width: 100%;
+      text-align: left;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem 0;
+      font-size: 1rem;
+      font-family: "Montserrat", Arial, sans-serif;
+      background: none;
+      border: none;
+      border-bottom: solid 2px #474544;
+      color: #474544;
+      margin-bottom: 1.25rem;
+      outline: none;
+      letter-spacing: 1px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      border-bottom-color: #8b1a2b;
+    }
+
+    input::placeholder {
+      color: #474544;
+    }
+
+    form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    button {
+      background: none;
+      border: solid 2px #474544;
+      color: #474544;
+      cursor: pointer;
+      font-family: "Montserrat", Arial, sans-serif;
+      font-size: 0.875rem;
+      font-weight: bold;
+      padding: 15px 35px;
+      text-transform: uppercase;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+    }
+
+    button:hover {
+      background: #474544;
+      color: #f2f3eb;
+    }
+
+    .error {
+      color: #c0392b;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      min-height: 1.25rem;
+      font-weight: 500;
+    }
+
+    @media screen and (max-width: 480px) {
+      .card {
+        border-radius: 0;
+        border: none;
+        min-height: 100vh;
+        justify-content: center;
+        max-width: 100%;
+        padding: 2rem 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.25rem;
+      }
+
+      button {
+        padding: 12px 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/hussain.png" alt="Relay" class="logo">
+    <h1>Relay</h1>
+    <div class="underline"></div>
+    <div class="error">{{ERROR_MESSAGE}}</div>
+    <form method="POST" action="/login">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Username" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit">Confirm</button>
+    </form>
+  </div>
+</body>
+</html>
