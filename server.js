@@ -143,6 +143,16 @@ app.get('/watch', requireAuth, function (req, res) {
   sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': YOUTUBE_VIDEO_ID });
 });
 
+// Download access log (protected)
+app.get('/logs', requireAuth, function (req, res) {
+  if (!fs.existsSync(LOG_FILE)) {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="access.csv"');
+    return res.send('timestamp,event,username,ip\n');
+  }
+  res.download(LOG_FILE, 'access.csv');
+});
+
 // Logout handler
 app.post('/logout', function (req, res) {
   var username = req.session.username;
