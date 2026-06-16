@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 // --- Configuration ---
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
-const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || 'dQw4w9WgXcQ';
+const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || 'ih_YKfiSzCs';
 const LOG_FILE = path.join(__dirname, 'access.csv');
 
 function getUsers() {
