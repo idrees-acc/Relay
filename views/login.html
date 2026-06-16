@@ -10,15 +10,18 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --border: #262626;
-      --text: #fafafa;
-      --text-muted: #a1a1aa;
-      --accent: #e4e4e7;
-      --error: #ef4444;
-      --focus: #3b82f6;
-      --radius: 12px;
+      --green-900: #14532d;
+      --green-800: #166534;
+      --green-700: #15803d;
+      --gold: #d4a843;
+      --gold-light: #e8c972;
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --border: #e0e0dc;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --error: #dc2626;
+      --radius: 10px;
     }
 
     * {
@@ -29,7 +32,7 @@
 
     body {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
+      background: var(--green-900);
       color: var(--text);
       display: flex;
       align-items: center;
@@ -42,35 +45,40 @@
 
     .login {
       width: 100%;
-      max-width: 380px;
+      max-width: 400px;
     }
 
     .brand {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     .brand img {
-      width: 72px;
+      width: 80px;
       height: auto;
       margin-bottom: 1rem;
-      opacity: 0.9;
     }
 
     .brand h1 {
       font-size: 1.25rem;
       font-weight: 600;
       letter-spacing: 0.02em;
-      color: var(--text);
+      color: #ffffff;
+    }
+
+    .brand p {
+      font-size: 0.8125rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 0.25rem;
     }
 
     .card {
       background: var(--surface);
-      border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 2rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
     }
 
     .error {
@@ -108,43 +116,73 @@
     }
 
     input:focus {
-      border-color: var(--focus);
+      border-color: var(--green-700);
+      box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.15);
     }
 
     input::placeholder {
-      color: #52525b;
+      color: #a0a0a0;
     }
 
     button {
       width: 100%;
-      padding: 0.625rem;
+      padding: 0.7rem;
       font-size: 0.875rem;
       font-family: inherit;
       font-weight: 600;
-      background: var(--text);
-      color: var(--bg);
+      background: var(--green-800);
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: background 0.15s;
       margin-top: 0.25rem;
     }
 
     button:hover {
-      opacity: 0.85;
+      background: var(--green-700);
     }
 
     button:active {
-      opacity: 0.7;
+      background: var(--green-900);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0 1rem;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 1.5rem;
     }
 
     @media screen and (max-width: 480px) {
+      body {
+        padding: 0;
+        background: var(--green-900);
+      }
+
+      .login {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        min-height: 100dvh;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+
       .card {
+        border-radius: 12px;
         padding: 1.5rem;
       }
 
       .brand img {
-        width: 56px;
+        width: 64px;
       }
     }
   </style>
@@ -169,6 +207,7 @@
         <button type="submit">Sign in</button>
       </form>
     </div>
+    <div class="footer">Ashara Mubaraka 1448H</div>
   </div>
 </body>
 </html>

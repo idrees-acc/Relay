@@ -8,12 +8,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
   <style>
     :root {
-      --bg: #000;
-      --header-bg: rgba(0, 0, 0, 0.7);
+      --green-900: #14532d;
+      --green-800: #166534;
+      --green-700: #15803d;
+      --gold: #d4a843;
+      --gold-light: #e8c972;
+      --bg: #0c0c0c;
+      --header-bg: rgba(20, 83, 45, 0.92);
       --text: #fafafa;
-      --text-muted: #a1a1aa;
+      --text-muted: rgba(255, 255, 255, 0.7);
       --border: rgba(255, 255, 255, 0.1);
     }
 
@@ -49,7 +55,7 @@
       background: var(--header-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(212, 168, 67, 0.25);
     }
 
     .header-left {
@@ -61,20 +67,19 @@
     .header-logo {
       width: 28px;
       height: auto;
-      opacity: 0.9;
     }
 
     header h1 {
       font-size: 0.8125rem;
       font-weight: 600;
       letter-spacing: 0.02em;
-      color: var(--text-muted);
+      color: var(--gold-light);
     }
 
     .logout-btn {
       background: none;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
+      border: 1px solid rgba(212, 168, 67, 0.35);
+      color: var(--gold-light);
       cursor: pointer;
       font-family: inherit;
       font-size: 0.75rem;
@@ -85,51 +90,69 @@
     }
 
     .logout-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(212, 168, 67, 0.12);
+      border-color: rgba(212, 168, 67, 0.5);
     }
 
-    .video-wrap {
+    .player-wrap {
       position: fixed;
-      top: 0;
+      top: 48px;
       left: 0;
-      width: 100%;
-      height: 100%;
-      user-select: none;
-      -webkit-user-select: none;
+      right: 0;
+      bottom: 0;
     }
 
-    .video-wrap iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .plyr,
+    .plyr__video-embed,
+    .plyr__video-wrapper {
+      height: 100% !important;
+      width: 100% !important;
     }
 
-    .video-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
+    .plyr--video {
       height: 100%;
-      z-index: 50;
-      cursor: pointer;
     }
 
-    .video-overlay.hidden {
-      display: none;
+    /* Theme Plyr controls to match green/gold */
+    :root {
+      --plyr-color-main: var(--green-700);
+      --plyr-video-control-color: #ffffff;
+      --plyr-video-control-background-hover: var(--green-800);
+      --plyr-range-fill-background: var(--gold);
+      --plyr-range-thumb-background: var(--gold-light);
+      --plyr-video-controls-background: linear-gradient(transparent, rgba(20, 83, 45, 0.85));
+      --plyr-badge-background: var(--green-800);
+      --plyr-tooltip-background: var(--green-900);
+      --plyr-menu-background: rgba(20, 83, 45, 0.95);
+      --plyr-menu-color: #ffffff;
+    }
+
+    @media screen and (max-width: 480px) {
+      header {
+        padding: 0 0.75rem;
+        height: 44px;
+      }
+
+      header h1 {
+        font-size: 0.75rem;
+      }
+
+      .header-logo {
+        width: 24px;
+      }
+
+      .logout-btn {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.7rem;
+      }
+
+      .player-wrap {
+        top: 44px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="video-wrap">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/{{YOUTUBE_VIDEO_ID}}?rel=0&modestbranding=1"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen
-    ></iframe>
-    <div class="video-overlay" id="overlay"></div>
-  </div>
   <header>
     <div class="header-left">
       <img src="/hussain.png" alt="" class="header-logo">
@@ -139,16 +162,37 @@
       <button type="submit" class="logout-btn">Log out</button>
     </form>
   </header>
+  <div class="player-wrap">
+    <div id="player" data-plyr-provider="youtube" data-plyr-embed-id="{{YOUTUBE_VIDEO_ID}}"></div>
+  </div>
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
   <script>
-    var overlay = document.getElementById('overlay');
-    overlay.addEventListener('click', function () {
-      overlay.classList.add('hidden');
-    });
-    document.querySelector('.video-wrap').addEventListener('mouseleave', function () {
-      overlay.classList.remove('hidden');
-    });
-    overlay.addEventListener('contextmenu', function (e) {
-      e.preventDefault();
+    var player = new Plyr('#player', {
+      controls: [
+        'play-large',
+        'play',
+        'progress',
+        'current-time',
+        'duration',
+        'mute',
+        'volume',
+        'captions',
+        'settings',
+        'fullscreen'
+      ],
+      settings: ['captions', 'quality', 'speed'],
+      ratio: '16:9',
+      clickToPlay: true,
+      disableContextMenu: true,
+      hideControls: true,
+      keyboard: { focused: true, global: true },
+      youtube: {
+        noCookie: true,
+        rel: 0,
+        showinfo: 0,
+        modestbranding: 1,
+        playsinline: 1
+      }
     });
   </script>
 </body>
