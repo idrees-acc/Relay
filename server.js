@@ -13,20 +13,14 @@ const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
 const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || '1dbzFhRCmHLnlB6vI2dpgbXOTKlx8xrgEAK5BhuqdJLM';
 
-function getUsers() {
-  try {
-    return JSON.parse(process.env.USERS || '[]');
-  } catch {
-    console.error('Failed to parse USERS env var. Expected JSON array.');
-    return [];
-  }
-}
+// --- Config Cache (from Sheet2) ---
 
-// --- YouTube Video ID Cache (from Sheet2) ---
-
-var cachedVideoId = 'ih_YKfiSzCs';
-var videoIdLastFetched = 0;
-var CACHE_TTL = 10 * 1000; // refresh from sheet every 6 hours
+var cachedConfig = {
+  videoId: 'ih_YKfiSzCs',
+  users: [],
+  lastFetched: 0
+};
+var CACHE_TTL = 6 * 60 * 60 * 1000; // refresh from sheet every 6 hours
 
 function extractVideoId(value) {
   var str = String(value || '').trim();
@@ -36,29 +30,38 @@ function extractVideoId(value) {
   return str;
 }
 
-async function fetchVideoId() {
+async function fetchConfig() {
   var now = Date.now();
-  if (now - videoIdLastFetched < CACHE_TTL) {
-    return cachedVideoId;
+  if (now - cachedConfig.lastFetched < CACHE_TTL) {
+    return cachedConfig;
   }
 
   try {
     var sheets = getSheetsClient();
     var result = await sheets.spreadsheets.values.get({
       spreadsheetId: GOOGLE_SHEET_ID,
-      range: 'Sheet2!B1'
+      range: 'Sheet2!A:B'
     });
 
     var rows = result.data.values || [];
-    if (rows[0] && rows[0][0]) {
-      cachedVideoId = extractVideoId(rows[0][0]);
+    // Row 1: youtube_video_id | <video id or link>
+    if (rows[0] && rows[0][1]) {
+      cachedConfig.videoId = extractVideoId(rows[0][1]);
     }
-    videoIdLastFetched = now;
+    // Row 3+: username | password
+    var users = [];
+    for (var i = 2; i < rows.length; i++) {
+      if (rows[i][0] && rows[i][1]) {
+        users.push({ username: String(rows[i][0]).trim(), password: String(rows[i][1]).trim() });
+      }
+    }
+    cachedConfig.users = users;
+    cachedConfig.lastFetched = now;
   } catch (err) {
-    console.error('Failed to fetch video ID from Sheet2:', err.message);
+    console.error('Failed to fetch config from Sheet2:', err.message);
   }
 
-  return cachedVideoId;
+  return cachedConfig;
 }
 
 // --- Google Sheets Logging ---
@@ -190,11 +193,11 @@ app.get('/', function (req, res) {
 });
 
 // Login handler
-app.post('/login', function (req, res) {
+app.post('/login', async function (req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  var users = getUsers();
-  var user = users.find(function (u) {
+  var config = await fetchConfig();
+  var user = config.users.find(function (u) {
     return u.username === username && u.password === password;
   });
 
@@ -227,8 +230,8 @@ app.post('/login', function (req, res) {
 
 // Video page (protected)
 app.get('/watch', requireAuth, async function (req, res) {
-  var videoId = await fetchVideoId();
-  sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': videoId });
+  var config = await fetchConfig();
+  sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': config.videoId });
 });
 
 
