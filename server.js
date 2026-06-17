@@ -2,15 +2,17 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const { google } = require('googleapis');
 
 const app = express();
+app.set('trust proxy', true);
 const PORT = process.env.PORT || 3000;
 
 // --- Configuration ---
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
 const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || 'ih_YKfiSzCs';
-const LOG_FILE = path.join(__dirname, 'access.csv');
+const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || '1dbzFhRCmHLnlB6vI2dpgbXOTKlx8xrgEAK5BhuqdJLM';
 
 function getUsers() {
   try {
@@ -21,21 +23,68 @@ function getUsers() {
   }
 }
 
-// --- CSV Logging ---
+// --- Google Sheets Logging ---
 
-function ensureLogFile() {
-  if (!fs.existsSync(LOG_FILE)) {
-    fs.writeFileSync(LOG_FILE, 'timestamp,event,username,ip\n', 'utf8');
-  }
+function getSheetsClient() {
+  var auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+    },
+    scopes: ['https://www.googleapis.com/auth/spreadsheets']
+  });
+  return google.sheets({ version: 'v4', auth: auth });
 }
 
-function logEvent(event, username, ip) {
-  ensureLogFile();
-  var timestamp = new Date().toISOString();
-  var safeUsername = String(username || '').replace(/,/g, ';');
-  var safeIp = String(ip || '').replace(/,/g, ';');
-  var line = timestamp + ',' + event + ',' + safeUsername + ',' + safeIp + '\n';
-  fs.appendFileSync(LOG_FILE, line, 'utf8');
+function getISTTimestamp() {
+  return new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+}
+
+function parseDevice(userAgent) {
+  var ua = String(userAgent || '');
+  if (!ua) return 'Unknown';
+
+  var device = '';
+
+  if (/iPhone/.test(ua)) device = 'iPhone';
+  else if (/iPad/.test(ua)) device = 'iPad';
+  else if (/Android/.test(ua)) device = 'Android';
+  else if (/Windows/.test(ua)) device = 'Windows';
+  else if (/Macintosh|Mac OS/.test(ua)) device = 'Mac';
+  else if (/Linux/.test(ua)) device = 'Linux';
+  else device = 'Other';
+
+  if (/Edg\//.test(ua)) device += ' / Edge';
+  else if (/Chrome\//.test(ua) && !/Chromium/.test(ua)) device += ' / Chrome';
+  else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) device += ' / Safari';
+  else if (/Firefox\//.test(ua)) device += ' / Firefox';
+
+  return device;
+}
+
+function logEvent(event, username, ip, userAgent) {
+  var timestamp = getISTTimestamp();
+  var device = parseDevice(userAgent);
+  var row = [timestamp, event, String(username || ''), String(ip || ''), device];
+
+  var sheets = getSheetsClient();
+  sheets.spreadsheets.values.append({
+    spreadsheetId: GOOGLE_SHEET_ID,
+    range: 'Sheet1!A:E',
+    valueInputOption: 'RAW',
+    requestBody: { values: [row] }
+  }).catch(function (err) {
+    console.error('Failed to log to Google Sheet:', err.message);
+  });
 }
 
 // --- Middleware ---
@@ -112,7 +161,7 @@ app.post('/login', function (req, res) {
   });
 
   if (!user) {
-    logEvent('login_failed', username, req.ip);
+    logEvent('login_failed', username, req.ip, req.headers['user-agent']);
     return sendView(res, 'login.html', {
       '{{ERROR_MESSAGE}}': 'Invalid username or password'
     });
@@ -133,7 +182,7 @@ app.post('/login', function (req, res) {
     }
     req.session.username = username;
     activeSessions.set(username, req.sessionID);
-    logEvent('login_success', username, req.ip);
+    logEvent('login_success', username, req.ip, req.headers['user-agent']);
     res.redirect('/watch');
   });
 });
@@ -143,22 +192,13 @@ app.get('/watch', requireAuth, function (req, res) {
   sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': YOUTUBE_VIDEO_ID });
 });
 
-// Download access log (protected)
-app.get('/logs', requireAuth, function (req, res) {
-  if (!fs.existsSync(LOG_FILE)) {
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="access.csv"');
-    return res.send('timestamp,event,username,ip\n');
-  }
-  res.download(LOG_FILE, 'access.csv');
-});
 
 // Logout handler
 app.post('/logout', function (req, res) {
   var username = req.session.username;
   if (username) {
     activeSessions.delete(username);
-    logEvent('logout', username, req.ip);
+    logEvent('logout', username, req.ip, req.headers['user-agent']);
   }
   req.session.destroy(function () {
     res.redirect('/');
