@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 3000;
 // --- Configuration ---
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
-const YOUTUBE_VIDEO_ID = process.env.YOUTUBE_VIDEO_ID || 'ih_YKfiSzCs';
 const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID || '1dbzFhRCmHLnlB6vI2dpgbXOTKlx8xrgEAK5BhuqdJLM';
 
 function getUsers() {
@@ -21,6 +20,45 @@ function getUsers() {
     console.error('Failed to parse USERS env var. Expected JSON array.');
     return [];
   }
+}
+
+// --- YouTube Video ID Cache (from Sheet2) ---
+
+var cachedVideoId = 'ih_YKfiSzCs';
+var videoIdLastFetched = 0;
+var CACHE_TTL = 6 * 60 * 60 * 1000; // refresh from sheet every 6 hours
+
+function extractVideoId(value) {
+  var str = String(value || '').trim();
+  var match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
+  if (match) return match[1];
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  return str;
+}
+
+async function fetchVideoId() {
+  var now = Date.now();
+  if (now - videoIdLastFetched < CACHE_TTL) {
+    return cachedVideoId;
+  }
+
+  try {
+    var sheets = getSheetsClient();
+    var result = await sheets.spreadsheets.values.get({
+      spreadsheetId: GOOGLE_SHEET_ID,
+      range: 'Sheet2!B1'
+    });
+
+    var rows = result.data.values || [];
+    if (rows[0] && rows[0][0]) {
+      cachedVideoId = extractVideoId(rows[0][0]);
+    }
+    videoIdLastFetched = now;
+  } catch (err) {
+    console.error('Failed to fetch video ID from Sheet2:', err.message);
+  }
+
+  return cachedVideoId;
 }
 
 // --- Google Sheets Logging ---
@@ -188,8 +226,9 @@ app.post('/login', function (req, res) {
 });
 
 // Video page (protected)
-app.get('/watch', requireAuth, function (req, res) {
-  sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': YOUTUBE_VIDEO_ID });
+app.get('/watch', requireAuth, async function (req, res) {
+  var videoId = await fetchVideoId();
+  sendView(res, 'watch.html', { '{{YOUTUBE_VIDEO_ID}}': videoId });
 });
 
 
