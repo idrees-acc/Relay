@@ -20,7 +20,7 @@ var cachedConfig = {
   users: [],
   lastFetched: 0
 };
-var CACHE_TTL = 6 * 60 * 60 * 1000; // refresh from sheet every 6 hours
+var CACHE_TTL = 60 * 1000; // refresh from sheet every 60 seconds
 
 function extractVideoId(value) {
   var str = String(value || '').trim();
