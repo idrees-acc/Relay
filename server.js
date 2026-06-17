@@ -26,7 +26,7 @@ function getUsers() {
 
 var cachedVideoId = 'ih_YKfiSzCs';
 var videoIdLastFetched = 0;
-var CACHE_TTL = 6 * 60 * 60 * 1000; // refresh from sheet every 6 hours
+var CACHE_TTL = 10 * 1000; // refresh from sheet every 6 hours
 
 function extractVideoId(value) {
   var str = String(value || '').trim();
