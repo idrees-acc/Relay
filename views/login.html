@@ -168,19 +168,23 @@
     .footer {
       text-align: center;
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.85);
+      color: #ffffff;
       margin-top: 1.5rem;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
     }
 
     .footer a {
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255, 255, 255, 0.6);
       text-decoration: none;
       font-size: 0.6875rem;
     }
 
     .footer a:hover {
-      color: rgba(255, 255, 255, 0.8);
+      color: #ffffff;
     }
 
     @media screen and (max-width: 480px) {
