@@ -223,8 +223,6 @@
       <div class="error">{{ERROR_MESSAGE}}</div>
       <form id="loginForm" method="POST" action="/login">
         <input type="hidden" name="fingerprint" id="fingerprint">
-        <input type="hidden" name="lat" id="lat">
-        <input type="hidden" name="lon" id="lon">
         <div class="field">
           <label for="username">Username</label>
           <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
@@ -244,15 +242,6 @@
     </div>
   <script src="https://openfpcdn.io/fingerprintjs/v4"></script>
   <script>
-    // Capture browser GPS location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function (pos) {
-        document.getElementById('lat').value = pos.coords.latitude;
-        document.getElementById('lon').value = pos.coords.longitude;
-      }, function () {}, { timeout: 5000 });
-    }
-
-    // Capture browser fingerprint before form submit
     var fpLoaded = FingerprintJS.load();
     document.getElementById('loginForm').addEventListener('submit', function (e) {
       var fpField = document.getElementById('fingerprint');
