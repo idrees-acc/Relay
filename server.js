@@ -112,10 +112,10 @@ function parseDevice(userAgent) {
 
 function fetchLocation(ip) {
   var cleanIp = String(ip || '').replace(/^::ffff:/, '');
-  var empty = { country: '', state: '', city: '', district: '', zip: '', isp: '' };
+  var empty = { country: '', state: '', city: '', district: '' };
 
   return new Promise(function (resolve) {
-    var url = 'http://ip-api.com/json/' + encodeURIComponent(cleanIp) + '?fields=status,country,regionName,city,district,zip,isp';
+    var url = 'http://ip-api.com/json/' + encodeURIComponent(cleanIp) + '?fields=status,country,regionName,city,district';
     var req = http.get(url, function (res) {
       var data = '';
       res.on('data', function (chunk) { data += chunk; });
@@ -127,9 +127,7 @@ function fetchLocation(ip) {
               country: json.country || '',
               state: json.regionName || '',
               city: json.city || '',
-              district: json.district || '',
-              zip: json.zip || '',
-              isp: json.isp || ''
+              district: json.district || ''
             });
           } else {
             resolve(empty);
@@ -149,12 +147,12 @@ function logEvent(event, username, ip, userAgent, fingerprint) {
   var device = parseDevice(userAgent);
 
   fetchLocation(ip).then(function (loc) {
-    var row = [timestamp, event, String(username || ''), String(ip || ''), device, loc.country, loc.state, loc.city, loc.district, loc.zip, loc.isp, String(fingerprint || '')];
+    var row = [timestamp, event, String(username || ''), String(ip || ''), device, loc.country, loc.state, loc.city, loc.district, String(fingerprint || '')];
 
     var sheets = getSheetsClient();
     sheets.spreadsheets.values.append({
       spreadsheetId: GOOGLE_SHEET_ID,
-      range: 'Sheet1!A:L',
+      range: 'Sheet1!A:J',
       valueInputOption: 'RAW',
       requestBody: { values: [row] }
     }).catch(function (err) {
