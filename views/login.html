@@ -240,17 +240,21 @@
       <a href="https://aewaz.com/" target="_blank">Built With Care By Aewaz Technologies</a>
     </div>
     </div>
+  <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.min.js"></script>
   <script>
-    var fpScript = document.createElement('script');
-    fpScript.src = 'https://openfpcdn.io/fingerprintjs/v4';
-    fpScript.onload = function () {
-      var FP = window.FingerprintJS || window.Fingerprint;
-      if (!FP) return;
-      FP.load().then(function (fp) { return fp.get(); }).then(function (result) {
+    var fpReady = FingerprintJS.load().then(function (fp) { return fp.get(); });
+    fpReady.then(function (result) {
+      document.getElementById('fingerprint').value = result.visitorId;
+    });
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      if (document.getElementById('fingerprint').value) return;
+      e.preventDefault();
+      var form = this;
+      fpReady.then(function (result) {
         document.getElementById('fingerprint').value = result.visitorId;
-      }).catch(function () {});
-    };
-    document.head.appendChild(fpScript);
+        form.submit();
+      }).catch(function () { form.submit(); });
+    });
   </script>
 </body>
 </html>
