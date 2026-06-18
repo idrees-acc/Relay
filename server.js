@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const { google } = require('googleapis');
 
 const app = express();
@@ -109,19 +111,70 @@ function parseDevice(userAgent) {
   return device;
 }
 
-function logEvent(event, username, ip, userAgent) {
+function httpGet(url) {
+  var client = url.startsWith('https') ? https : http;
+  return new Promise(function (resolve) {
+    var req = client.get(url, { headers: { 'User-Agent': 'Relay/1.0' } }, function (res) {
+      var data = '';
+      res.on('data', function (chunk) { data += chunk; });
+      res.on('end', function () { resolve(data); });
+    });
+    req.on('error', function () { resolve(''); });
+    req.setTimeout(3000, function () { req.destroy(); resolve(''); });
+  });
+}
+
+function fetchLocation(ip) {
+  var cleanIp = String(ip || '').replace(/^::ffff:/, '');
+  var empty = { country: '', state: '', city: '', location: '' };
+
+  return httpGet('http://ip-api.com/json/' + encodeURIComponent(cleanIp) + '?fields=status,country,regionName,city,lat,lon')
+    .then(function (data) {
+      if (!data) return empty;
+      var json = JSON.parse(data);
+      if (json.status !== 'success') return empty;
+
+      var result = {
+        country: json.country || '',
+        state: json.regionName || '',
+        city: json.city || '',
+        location: ''
+      };
+
+      if (!json.lat || !json.lon) return result;
+
+      return httpGet('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + json.lat + '&lon=' + json.lon + '&zoom=18&addressdetails=0')
+        .then(function (geoData) {
+          if (geoData) {
+            try {
+              var geo = JSON.parse(geoData);
+              result.location = geo.display_name || '';
+            } catch (e) {}
+          }
+          return result;
+        });
+    })
+    .catch(function () {
+      return empty;
+    });
+}
+
+function logEvent(event, username, ip, userAgent, fingerprint) {
   var timestamp = getISTTimestamp();
   var device = parseDevice(userAgent);
-  var row = [timestamp, event, String(username || ''), String(ip || ''), device];
 
-  var sheets = getSheetsClient();
-  sheets.spreadsheets.values.append({
-    spreadsheetId: GOOGLE_SHEET_ID,
-    range: 'Sheet1!A:E',
-    valueInputOption: 'RAW',
-    requestBody: { values: [row] }
-  }).catch(function (err) {
-    console.error('Failed to log to Google Sheet:', err.message);
+  fetchLocation(ip).then(function (loc) {
+    var row = [timestamp, event, String(username || ''), String(ip || ''), device, loc.country, loc.state, loc.city, loc.location, String(fingerprint || '')];
+
+    var sheets = getSheetsClient();
+    sheets.spreadsheets.values.append({
+      spreadsheetId: GOOGLE_SHEET_ID,
+      range: 'Sheet1!A:J',
+      valueInputOption: 'RAW',
+      requestBody: { values: [row] }
+    }).catch(function (err) {
+      console.error('Failed to log to Google Sheet:', err.message);
+    });
   });
 }
 
@@ -198,8 +251,10 @@ app.post('/login', function (req, res) {
     return u.username === username && u.password === password;
   });
 
+  var fingerprint = req.body.fingerprint || '';
+
   if (!user) {
-    logEvent('login_failed', username, req.ip, req.headers['user-agent']);
+    logEvent('login_failed', username, req.ip, req.headers['user-agent'], fingerprint);
     return sendView(res, 'login.html', {
       '{{ERROR_MESSAGE}}': 'Invalid username or password'
     });
@@ -219,8 +274,9 @@ app.post('/login', function (req, res) {
       });
     }
     req.session.username = username;
+    req.session.fingerprint = fingerprint;
     activeSessions.set(username, req.sessionID);
-    logEvent('login_success', username, req.ip, req.headers['user-agent']);
+    logEvent('login_success', username, req.ip, req.headers['user-agent'], fingerprint);
     res.redirect('/watch');
   });
 });
@@ -235,9 +291,10 @@ app.get('/watch', requireAuth, async function (req, res) {
 // Logout handler
 app.post('/logout', function (req, res) {
   var username = req.session.username;
+  var fingerprint = req.session.fingerprint || '';
   if (username) {
     activeSessions.delete(username);
-    logEvent('logout', username, req.ip, req.headers['user-agent']);
+    logEvent('logout', username, req.ip, req.headers['user-agent'], fingerprint);
   }
   req.session.destroy(function () {
     res.redirect('/');

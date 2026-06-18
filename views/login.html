@@ -206,7 +206,8 @@
     </div>
     <div class="card">
       <div class="error">{{ERROR_MESSAGE}}</div>
-      <form method="POST" action="/login">
+      <form id="loginForm" method="POST" action="/login">
+        <input type="hidden" name="fingerprint" id="fingerprint">
         <div class="field">
           <label for="username">Username</label>
           <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
@@ -217,6 +218,19 @@
         </div>
         <button type="submit">Sign in</button>
       </form>
+      <script src="https://openfpcdn.io/fingerprintjs/v4"></script>
+      <script>
+        var fpReady = FingerprintJS.load();
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+          var fpField = document.getElementById('fingerprint');
+          if (fpField.value) return;
+          e.preventDefault();
+          fpReady.then(function (fp) { return fp.get(); }).then(function (result) {
+            fpField.value = result.visitorId;
+            e.target.submit();
+          });
+        });
+      </script>
     </div>
     <div class="footer">Ashara Mubaraka 1448H</div>
   </div>
