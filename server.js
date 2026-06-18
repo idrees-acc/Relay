@@ -124,10 +124,34 @@ function httpGet(url) {
   });
 }
 
-function fetchLocation(ip) {
-  var cleanIp = String(ip || '').replace(/^::ffff:/, '');
+function reverseGeocode(lat, lon) {
+  return httpGet('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&zoom=18&addressdetails=1')
+    .then(function (geoData) {
+      if (!geoData) return null;
+      var geo = JSON.parse(geoData);
+      if (!geo.address) return { location: geo.display_name || '' };
+      var a = geo.address;
+      return {
+        country: a.country || '',
+        state: a.state || '',
+        city: a.city || a.town || a.village || a.suburb || '',
+        location: geo.display_name || ''
+      };
+    })
+    .catch(function () { return null; });
+}
+
+function fetchLocation(ip, browserLat, browserLon) {
   var empty = { country: '', state: '', city: '', location: '' };
 
+  // If browser GPS coordinates are available, use those for accurate location
+  if (browserLat && browserLon) {
+    return reverseGeocode(browserLat, browserLon)
+      .then(function (result) { return result || empty; });
+  }
+
+  // Fall back to IP-based geolocation
+  var cleanIp = String(ip || '').replace(/^::ffff:/, '');
   return httpGet('http://ip-api.com/json/' + encodeURIComponent(cleanIp) + '?fields=status,country,regionName,city,lat,lon')
     .then(function (data) {
       if (!data) return empty;
@@ -143,14 +167,9 @@ function fetchLocation(ip) {
 
       if (!json.lat || !json.lon) return result;
 
-      return httpGet('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + json.lat + '&lon=' + json.lon + '&zoom=18&addressdetails=0')
-        .then(function (geoData) {
-          if (geoData) {
-            try {
-              var geo = JSON.parse(geoData);
-              result.location = geo.display_name || '';
-            } catch (e) {}
-          }
+      return reverseGeocode(json.lat, json.lon)
+        .then(function (geo) {
+          if (geo) result.location = geo.location;
           return result;
         });
     })
@@ -159,11 +178,11 @@ function fetchLocation(ip) {
     });
 }
 
-function logEvent(event, username, ip, userAgent, fingerprint) {
+function logEvent(event, username, ip, userAgent, fingerprint, browserLat, browserLon) {
   var timestamp = getISTTimestamp();
   var device = parseDevice(userAgent);
 
-  fetchLocation(ip).then(function (loc) {
+  fetchLocation(ip, browserLat, browserLon).then(function (loc) {
     var row = [timestamp, event, String(username || ''), String(ip || ''), device, loc.country, loc.state, loc.city, loc.location, String(fingerprint || '')];
 
     var sheets = getSheetsClient();
@@ -252,9 +271,11 @@ app.post('/login', function (req, res) {
   });
 
   var fingerprint = req.body.fingerprint || '';
+  var browserLat = req.body.lat || '';
+  var browserLon = req.body.lon || '';
 
   if (!user) {
-    logEvent('login_failed', username, req.ip, req.headers['user-agent'], fingerprint);
+    logEvent('login_failed', username, req.ip, req.headers['user-agent'], fingerprint, browserLat, browserLon);
     return sendView(res, 'login.html', {
       '{{ERROR_MESSAGE}}': 'Invalid username or password'
     });
@@ -275,8 +296,10 @@ app.post('/login', function (req, res) {
     }
     req.session.username = username;
     req.session.fingerprint = fingerprint;
+    req.session.browserLat = browserLat;
+    req.session.browserLon = browserLon;
     activeSessions.set(username, req.sessionID);
-    logEvent('login_success', username, req.ip, req.headers['user-agent'], fingerprint);
+    logEvent('login_success', username, req.ip, req.headers['user-agent'], fingerprint, browserLat, browserLon);
     res.redirect('/watch');
   });
 });
@@ -292,9 +315,11 @@ app.get('/watch', requireAuth, async function (req, res) {
 app.post('/logout', function (req, res) {
   var username = req.session.username;
   var fingerprint = req.session.fingerprint || '';
+  var browserLat = req.session.browserLat || '';
+  var browserLon = req.session.browserLon || '';
   if (username) {
     activeSessions.delete(username);
-    logEvent('logout', username, req.ip, req.headers['user-agent'], fingerprint);
+    logEvent('logout', username, req.ip, req.headers['user-agent'], fingerprint, browserLat, browserLon);
   }
   req.session.destroy(function () {
     res.redirect('/');
