@@ -187,18 +187,11 @@
       hideControls: true,
       keyboard: { focused: true, global: true },
       youtube: {
-        noCookie: true,
+        noCookie: false,
         rel: 0,
         showinfo: 0,
         modestbranding: 1,
         playsinline: 1
-      }
-    });
-
-    player.on('ready', function() {
-      var embed = player.embed;
-      if (embed && embed.setPlaybackQuality) {
-        embed.setPlaybackQuality('hd720');
       }
     });
   </script>
