@@ -186,16 +186,19 @@
       disableContextMenu: true,
       hideControls: true,
       keyboard: { focused: true, global: true },
-      quality: {
-        default: 720,
-        options: [1440, 1080, 720, 576, 480]
-      },
       youtube: {
         noCookie: true,
         rel: 0,
         showinfo: 0,
         modestbranding: 1,
         playsinline: 1
+      }
+    });
+
+    player.on('ready', function() {
+      var embed = player.embed;
+      if (embed && embed.setPlaybackQuality) {
+        embed.setPlaybackQuality('hd720');
       }
     });
   </script>
