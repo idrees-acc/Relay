@@ -283,6 +283,12 @@ app.post('/logout', function (req, res) {
   });
 });
 
+// --- Health Check (for UptimeRobot) ---
+
+app.get('/health', function (req, res) {
+  res.status(200).json({ status: 'ok' });
+});
+
 // --- Start ---
 
 app.listen(PORT, function () {
